@@ -1073,7 +1073,7 @@ export default function BuffaloBoyGame() {
           <p>One special power at a time. Mangoes, Golden Mangoes, and Moo Ping never replace your power. Red “!” markers mean danger; calm animals and background traffic are safe.</p>
         </details>
 
-        <span className={styles.srOnly} data-game-status data-level={levelId} data-stamps={earnedStamps.join(',')} data-x={Math.round(hud.x)} data-y={Math.round(hud.y)} data-health={lives} data-power={hud.power} data-checkpoint={hud.checkpoint} data-mode={mode} aria-live="polite">Mangoes {mangoCount}. Hearts {lives}. Journey {progress} percent. {hud.power}. {hud.message}.</span>
+        <span className={styles.srOnly} data-game-status data-level={levelId} data-stamps={earnedStamps.join(',')} data-x={Math.round(hud.x)} data-y={Math.round(hud.y)} data-health={lives} data-power={hud.power} data-checkpoint={hud.checkpoint} data-mode={mode} aria-live="polite">{[`Mangoes ${mangoCount}`, `Hearts ${lives}`, `Journey ${progress} percent`, hud.power, hud.message].filter(Boolean).join('. ')}.</span>
       </div>
     </section>
   );

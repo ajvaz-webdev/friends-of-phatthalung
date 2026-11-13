@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: 'Friends of Phatthalung',
   description: siteDescription,
+  icons: {
+    icon: '/favicon.svg',
+  },
   alternates: {
     canonical: siteUrl,
   },
@@ -26,7 +29,7 @@ export const metadata: Metadata = {
         url: socialImageUrl,
         width: 1200,
         height: 630,
-        alt: 'An illustrated view of Khao Ok Talu rising above the green landscape of Phatthalung.',
+        alt: 'An illustrated view of Khao Ok Thalu rising above the green landscape of Phatthalung.',
       },
     ],
   },
