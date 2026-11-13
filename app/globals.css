@@ -375,3 +375,70 @@
     padding-bottom: 72px;
   }
 }
+
+/* Floating section tools: tucked away while the opening photo is on screen. */
+.page-tools {
+  transition: opacity .25s ease, transform .25s ease, visibility .25s ease;
+}
+
+.page-tools.is-tucked {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-tools {
+    transition: none;
+  }
+}
+
+@media (max-width: 760px) {
+  /* Opening section on phones: photo on top, words below it, so the
+     headline no longer sits across people's faces. */
+  .hero {
+    display: block;
+    min-height: 0;
+    background: #10302a;
+  }
+
+  .hero-photo {
+    position: relative;
+    inset: auto;
+    display: block;
+    height: min(62vh, 470px);
+    object-position: 58% center;
+  }
+
+  .hero-overlay {
+    inset: 0 0 auto 0;
+    height: calc(min(62vh, 470px) + 2px);
+    background: linear-gradient(180deg, rgba(8, 31, 25, .62) 0%, rgba(8, 31, 25, 0) 24%, rgba(16, 48, 42, 0) 58%, #10302a 96%);
+  }
+
+  .hero-content {
+    margin-top: -64px;
+    padding-bottom: 54px;
+  }
+
+  h1 {
+    font-size: clamp(40px, 12.4vw, 58px);
+  }
+
+  /* Smaller round "Sections" button so it covers less of the photos. */
+  .section-jump summary {
+    width: 48px;
+    padding: 0;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .section-jump-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
