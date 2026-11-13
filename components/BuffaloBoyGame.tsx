@@ -652,22 +652,35 @@ export default function BuffaloBoyGame() {
   }, []);
 
   useEffect(() => {
+    // Load the game artwork (about 3.5 MB) only when a visitor scrolls near the
+    // game, so the rest of the page is not waiting on it.
     let cancelled = false;
     const image = new Image();
-    const playerReady = new Promise<void>((resolve, reject) => {
-    image.onload = () => {
-      buffaloAtlas = image;
-      const outline = document.createElement('canvas');
-      outline.width = image.naturalWidth; outline.height = image.naturalHeight;
-      const context = outline.getContext('2d');
-      if (context) { context.drawImage(image, 0, 0); context.globalCompositeOperation = 'source-in'; context.fillStyle = '#ffe274'; context.fillRect(0, 0, outline.width, outline.height); buffaloOutline = outline; }
-      resolve();
+    const start = () => {
+      const playerReady = new Promise<void>((resolve, reject) => {
+        image.onload = () => {
+          buffaloAtlas = image;
+          const outline = document.createElement('canvas');
+          outline.width = image.naturalWidth; outline.height = image.naturalHeight;
+          const context = outline.getContext('2d');
+          if (context) { context.drawImage(image, 0, 0); context.globalCompositeOperation = 'source-in'; context.fillStyle = '#ffe274'; context.fillRect(0, 0, outline.width, outline.height); buffaloOutline = outline; }
+          resolve();
+        };
+        image.onerror = () => reject(new Error('Buffalo artwork did not load'));
+        image.src = '/game/buffalo-poses-v2.png';
+      });
+      void Promise.all([loadArt(), playerReady]).then(() => { if (!cancelled) setArtReady(true); }).catch(() => { if (!cancelled) setArtFailed(true); });
     };
-    image.onerror = () => reject(new Error('Buffalo artwork did not load'));
-    image.src = '/game/buffalo-poses-v2.png';
-    });
-    void Promise.all([loadArt(), playerReady]).then(() => { if (!cancelled) setArtReady(true); }).catch(() => { if (!cancelled) setArtFailed(true); });
-    return () => { cancelled = true; image.onload = null; image.onerror = null; };
+    const section = document.getElementById('buffalo-boy');
+    let observer: IntersectionObserver | null = null;
+    if (!section || typeof IntersectionObserver === 'undefined') start();
+    else {
+      observer = new IntersectionObserver(entries => {
+        if (entries.some(entry => entry.isIntersecting)) { observer?.disconnect(); observer = null; start(); }
+      }, { rootMargin: '1500px 0px' });
+      observer.observe(section);
+    }
+    return () => { cancelled = true; observer?.disconnect(); image.onload = null; image.onerror = null; };
   }, []);
 
   const setMode = (next: GameMode) => {

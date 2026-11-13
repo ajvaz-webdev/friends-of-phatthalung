@@ -412,8 +412,8 @@
 
   .hero-overlay {
     inset: 0 0 auto 0;
-    height: min(62vh, 470px);
-    background: linear-gradient(180deg, rgba(8, 31, 25, .62) 0%, rgba(8, 31, 25, 0) 24%, rgba(16, 48, 42, 0) 60%, #10302a 100%);
+    height: calc(min(62vh, 470px) + 2px);
+    background: linear-gradient(180deg, rgba(8, 31, 25, .62) 0%, rgba(8, 31, 25, 0) 24%, rgba(16, 48, 42, 0) 58%, #10302a 96%);
   }
 
   .hero-content {
