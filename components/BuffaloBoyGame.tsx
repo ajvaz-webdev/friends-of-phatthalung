@@ -640,7 +640,10 @@ export default function BuffaloBoyGame() {
   const [focus, setFocus] = useState(false);
   const [portraitPhone, setPortraitPhone] = useState(false);
   const [touchScreen, setTouchScreen] = useState(false);
-  const [sidewaysPhone, setSidewaysPhone] = useState(false);
+  const focusRef = useRef(false);
+  const autoFocusRef = useRef(false);
+  const suppressAutoRef = useRef(false);
+  const sidewaysTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [rotateTipClosed, setRotateTipClosed] = useState(false);
   const [artReady, setArtReady] = useState(false);
   const [artFailed, setArtFailed] = useState(false);
@@ -899,31 +902,54 @@ export default function BuffaloBoyGame() {
     if (context && context.state !== 'closed') void context.close().catch(() => {});
   }, []);
 
-  useEffect(() => {
-    const touch = window.matchMedia('(pointer: coarse)');
-    const sideways = window.matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 620px)');
-    const sync = () => { setTouchScreen(touch.matches); setSidewaysPhone(sideways.matches); };
-    sync();
-    touch.addEventListener('change', sync);
-    sideways.addEventListener('change', sync);
-    return () => { touch.removeEventListener('change', sync); sideways.removeEventListener('change', sync); };
-  }, []);
+  useEffect(() => { focusRef.current = focus; }, [focus]);
+
+  // Phones: turning sideways once the game has started switches straight to
+  // the big sideways layout; turning back upright returns to the page.
+  // On iPhone the page is scrolled to the game first, which lets Safari tuck
+  // its address and tab bars away, then the game is laid over the screen.
+  const goSideways = (auto: boolean) => {
+    sidewaysTimersRef.current.forEach(clearTimeout);
+    sidewaysTimersRef.current = [
+      setTimeout(() => cardRef.current?.scrollIntoView({ block: 'start' }), 60),
+      setTimeout(() => { autoFocusRef.current = auto; setRotateTipClosed(false); setFocus(true); }, 260),
+    ];
+  };
 
   useEffect(() => {
-    const query = window.matchMedia('(orientation: portrait) and (pointer: coarse) and (max-width: 760px)');
-    let wasPortrait = query.matches;
-    setPortraitPhone(query.matches);
-    const update = () => {
-      setPortraitPhone(query.matches);
-      // Turned sideways mid-game without full screen: bring the game into view.
-      if (wasPortrait && !query.matches && modeRef.current === 'playing') {
-        // Wait for the "tap Full screen" reminder above the card to appear, then show it too.
-        setTimeout(() => (cardRef.current?.previousElementSibling ?? cardRef.current)?.scrollIntoView({ block: 'start' }), 80);
+    const touch = window.matchMedia('(pointer: coarse)');
+    const portrait = window.matchMedia('(orientation: portrait) and (pointer: coarse) and (max-width: 760px)');
+    const sideways = window.matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 620px)');
+    setTouchScreen(touch.matches);
+    setPortraitPhone(portrait.matches);
+    const onTouch = () => setTouchScreen(touch.matches);
+    const onTurn = () => {
+      setPortraitPhone(portrait.matches);
+      if (sideways.matches) {
+        if (document.fullscreenElement) return; // Android full screen already fills the screen.
+        if (focusRef.current) {
+          // Already laid over the screen while upright: redo it sideways so the browser bars can hide.
+          const auto = autoFocusRef.current;
+          setFocus(false);
+          goSideways(auto);
+        } else if (modeRef.current !== 'intro' && !suppressAutoRef.current) {
+          goSideways(true);
+        }
+      } else if (portrait.matches) {
+        suppressAutoRef.current = false;
+        sidewaysTimersRef.current.forEach(clearTimeout);
+        if (autoFocusRef.current) { autoFocusRef.current = false; setFocus(false); }
       }
-      wasPortrait = query.matches;
     };
-    query.addEventListener('change', update);
-    return () => query.removeEventListener('change', update);
+    touch.addEventListener('change', onTouch);
+    portrait.addEventListener('change', onTurn);
+    sideways.addEventListener('change', onTurn);
+    return () => {
+      touch.removeEventListener('change', onTouch);
+      portrait.removeEventListener('change', onTurn);
+      sideways.removeEventListener('change', onTurn);
+      sidewaysTimersRef.current.forEach(clearTimeout);
+    };
   }, []);
 
   useEffect(() => {
@@ -938,12 +964,13 @@ export default function BuffaloBoyGame() {
     if (!focus) return;
     const root = document.documentElement;
     const overflow = root.style.overflow;
-    root.style.overflow = 'hidden';
+    if (!window.matchMedia('(pointer: coarse)').matches) root.style.overflow = 'hidden';
     document.body.classList.add('game-focus');
     return () => { root.style.overflow = overflow; document.body.classList.remove('game-focus'); };
   }, [focus]);
 
   const enterFocus = () => {
+    autoFocusRef.current = false;
     setFocus(true);
     setRotateTipClosed(false);
     const card = cardRef.current;
@@ -956,6 +983,10 @@ export default function BuffaloBoyGame() {
   };
 
   const exitFocus = () => {
+    // Leaving while sideways: stay on the page until the phone is turned again.
+    if (window.matchMedia('(orientation: landscape) and (pointer: coarse)').matches) suppressAutoRef.current = true;
+    autoFocusRef.current = false;
+    sidewaysTimersRef.current.forEach(clearTimeout);
     setFocus(false);
     if (document.fullscreenElement) {
       nativeFullscreenRef.current = false;
@@ -985,6 +1016,11 @@ export default function BuffaloBoyGame() {
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     hintTimerRef.current = setTimeout(() => setShowHint(false), 2600);
     canvasRef.current?.focus({ preventScroll: true });
+    // Started while already holding the phone sideways: go straight to the big view.
+    if (!focusRef.current && window.matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 620px)').matches) {
+      suppressAutoRef.current = false;
+      goSideways(true);
+    }
   };
 
   const resume = () => {
@@ -1062,12 +1098,6 @@ export default function BuffaloBoyGame() {
           <output aria-label="Test input status">{hud.replay ? 'REPLAY' : 'MANUAL'} · {hud.controls} · x {Math.round(hud.x)} · y {Math.round(hud.y)}</output>
         </div>}
 
-        {sidewaysPhone && !focus && (
-          <div className={styles.fullscreenNudge} role="status">
-            <p><strong>Playing sideways?</strong> Tap Full screen first for the sideways layout.</p>
-            <button type="button" onClick={enterFocus}>Full screen</button>
-          </div>
-        )}
         <div ref={cardRef} className={`${styles.gameCard} ${focus ? styles.focusMode : ''}`} data-game-input onContextMenu={event => event.preventDefault()} onDragStart={event => event.preventDefault()}>
           <div className={styles.gameBar}>
             <div><span className={styles.statusDot}/><strong>BUFFALO BOY</strong><small>{level.name.toUpperCase()}</small></div>
@@ -1099,9 +1129,9 @@ export default function BuffaloBoyGame() {
                 <strong>Take a little trip through Phatthalung.</strong>
                 <span className={styles.startButtons}>
                   <button type="button" disabled={!artReady} onClick={() => begin(0)}>{artReady ? 'Start Adventure →' : artFailed ? 'Please reload to load the artwork' : 'Getting the journey ready…'}</button>
-                  {artReady && !focus && <button type="button" className={styles.overlaySecondary} onClick={() => { enterFocus(); begin(0); }}>Play full screen</button>}
+                  {artReady && !focus && !touchScreen && <button type="button" className={styles.overlaySecondary} onClick={() => { enterFocus(); begin(0); }}>Play full screen</button>}
                 </span>
-                {touchScreen && !focus && <small className={styles.sidewaysNote}><span className={styles.rotateIcon} aria-hidden="true"/><span><b>Tip:</b> tap <b>Play full screen</b> first, then turn your phone sideways.</span></small>}
+                {touchScreen && !focus && <small className={styles.sidewaysNote}><span className={styles.rotateIcon} aria-hidden="true"/><span><b>Tip:</b> press <b>Start</b>, then turn your phone sideways for the big screen.</span></small>}
                 <small className={styles.legend}><span>✦ Collect</span><span>! Danger</span><span>↕ Highlighted = interactive</span></small>
                 <small>3 levels · Checkpoints along the way</small>
               </div>

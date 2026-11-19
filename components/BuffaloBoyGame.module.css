@@ -714,15 +714,15 @@
   .focusMode .jumpButton { grid-column: 3; grid-row: 3; align-self: end; justify-self: end; min-width: 110px !important; min-height: 86px !important; }
   .focusMode .journeyPanel { grid-column: 2; grid-row: 1 / -1; z-index: 2; align-self: center; justify-self: center; width: min(640px, calc(100vw - 290px)); max-height: 100%; overflow: auto; }
   .focusMode .rotateTip { display: none; }
+  /* Swipes on the sideways game should not scroll the page underneath
+     (on iPhone that brings Safari's bars back). Result screens still scroll. */
+  .gameCard.focusMode { touch-action: none; }
+  .focusMode .journeyPanel { touch-action: pan-y; overscroll-behavior: contain; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .rotateIcon { animation: none; transform: rotate(-90deg); }
 }
 
-/* Reminder: full screen first, then sideways. */
+/* Start-screen tip on phones. */
 .sidewaysNote b { color: #fff4d6; }
-.fullscreenNudge { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; padding: 10px 10px 10px 14px; border-radius: 10px; background: #f0b977; color: #173c32; }
-.fullscreenNudge p { margin: 0; font: 13px/1.4 Georgia, serif; }
-.fullscreenNudge strong { margin-right: 4px; }
-.fullscreenNudge button { flex: 0 0 auto; min-height: 40px; padding: 0 16px; border: 0; border-radius: 99px; background: #173c32; color: #fff8e8; font: 700 10px/1 Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
