@@ -1,111 +1,132 @@
-'use client';
-import { useEffect, useRef, useState } from 'react';
-import BuffaloBoyGame from '../components/BuffaloBoyGame';
-const web=(src:string,sizes:string)=>{const name=src.replace('/photos/','').replace('.jpg','');const at=(width:number)=>`/photos/web/${name}-${width}.webp`;return {src:at(1600),srcSet:`${at(640)} 640w, ${at(1080)} 1080w, ${at(1600)} 1600w`,sizes}};
-const gallery=[
-{src:'/photos/haystack-friends.jpg',alt:'Two congregation friends smiling beside a haystack',label:'Country-road smiles'},
-{src:'/photos/fresh-coconuts.jpg',alt:'A fresh harvest of green coconuts',label:'From the garden'},
-{src:'/photos/table-feast.jpg',alt:'Colorful homemade food prepared for a shared meal',label:'A table full of love'},
-{src:'/photos/old-tree-friends.jpg',alt:'Two friends pausing beneath an old tree in Phatthalung',label:'Stories along the way'},
-{src:'/photos/shared-feast.jpg',alt:'A generous Thai meal prepared to share with friends',label:'Made to be shared'},
-{src:'/photos/marigold-field.jpg',alt:'A joyful visit to a bright marigold field',label:'Bright days out'},
-{src:'/photos/coconut-smile.jpg',alt:'A friend enjoying fresh coconut water on a country road',label:'Simple refreshments'},
-{src:'/photos/sunflower-group.jpg',alt:'Friends smiling together in a sunflower garden',label:'Days out together'},
-{src:'/photos/rice-fields-walk.jpg',alt:'Two friends walking beside green rice fields',label:'Side by side'},
-{src:'/photos/scooter-fields.jpg',alt:'Friends riding through the Phatthalung countryside',label:'The road home'},
-{src:'/photos/country-bridge.jpg',alt:'A friend crossing a small countryside bridge',label:'Every corner explored'},
-{src:'/photos/kitten-friend.jpg',alt:'A friend holding a small grey kitten',label:'Little joys'},
-{src:'/photos/memory-group-portrait.jpg',alt:'Congregation friends sharing a playful group portrait',label:'A room full of smiles'},
-{src:'/photos/memory-heart-selfie.jpg',alt:'Young friends making heart shapes together for a cheerful selfie',label:'Sending a little love'},
-{src:'/photos/memory-neighborly-visit.jpg',alt:'Two older women enjoying a warm conversation during a visit',label:'Time for a good conversation'}];
-const activityPhotos=[
-{src:'/photos/activity-motorbike-day.jpg',alt:'Friends gathering around a motorbike on a bright day in town',label:'Make the journey part of the fun',layout:'activity-tall'},
-{src:'/photos/activity-mural-walk.jpg',alt:'Friends walking beside a colorful neighborhood mural in Phatthalung',label:'Find color down a side street',layout:'activity-wide'},
-{src:'/photos/activity-night-market.jpg',alt:'An evening market and live event beneath Phatthalung limestone hills',label:'Stay out for a local night market',layout:'activity-tall'},
-{src:'/photos/activity-train-station.jpg',alt:'The railway tracks and platform at Phatthalung station',label:'Watch the town arrive by train'},
-{src:'/photos/activity-motorbike-friends.jpg',alt:'Two friends ready for a motorbike ride through Phatthalung',label:'Take a ride with a friend'},
-{src:'/photos/activity-doorway-friends.jpg',alt:'Two friends sharing a laugh beneath an umbrella',label:'Pause for the people you meet'},
-{src:'/photos/activity-mountain-stop.jpg',alt:'Friends stopping beneath a striking limestone mountain',label:'Turn an everyday stop into a photo stop',layout:'activity-wide'},
-{src:'/photos/activity-coffee-carnival.jpg',alt:'Coffee Carnival sign at a lively outdoor night event',label:'Follow the lights to a local event',layout:'activity-tall'},
-{src:'/photos/activity-durian-stop.jpg',alt:'Fresh durian and watermelons at a roadside fruit stand',label:'Try fruit from a roadside stand'},
-{src:'/photos/activity-lakeside-cafe.jpg',alt:'Desserts and drinks at a lakeside cafe during sunset',label:'Slow down at a lakeside café',layout:'activity-wide'},
-{src:'/photos/activity-box-pancakes.jpg',alt:'A tall stack of fluffy pancakes at The Box Phatthalung',label:'Share something sweet'},
-{src:'/photos/activity-baramio-coffee.jpg',alt:'A colorful iced drink topped with fried dough at a local coffee shop',label:'Find a new favorite drink'},
-{src:'/photos/activity-local-meal.jpg',alt:'A plate of rice and local dishes prepared for friends',label:'Taste a home-style meal'},
-{src:'/photos/activity-basil-rice.jpg',alt:'Thai basil pork with rice and a crispy fried egg',label:'Order a comforting classic'},
-{src:'/photos/activity-table-grill.jpg',alt:'Friends cooking together around a tabletop grill',label:'Cook and talk around the table',layout:'activity-wide'},
-{src:'/photos/activity-steak-dinner.jpg',alt:'Steak over rice with a cold drink shared at dinner',label:'End the day with a good meal',layout:'activity-wide'},
-{src:'/photos/activity-rice-field-riders.jpg',alt:'Friends pausing together on motorbikes beside vivid green rice fields',label:'Ride the country roads together',layout:'activity-wide'},
-{src:'/photos/activity-rice-field-rider.jpg',alt:'A motorbike rider pausing beside green rice fields and limestone hills',label:'Stop wherever the view asks you to',layout:'activity-wide'},
-{src:'/photos/activity-mountain-coffee-cart.jpg',alt:'A small coffee cart beside the road with Khao Ok Thalu beyond',label:'Find coffee with a mountain view',layout:'activity-tall'},
-{src:'/photos/activity-green-cafe-drink.jpg',alt:'A bright green cafe drink shared at a table with friends',label:'Try something new at a local café',layout:'activity-tall'},
-{src:'/photos/little-pad-thai-view.jpg',alt:'Two plates of pad thai served at a table overlooking green rice fields',label:'Eat pad thai with a rice-field view',layout:'activity-tall'}];
-const naturePhotos=[
-{src:'/photos/nature-mountain-walk.jpg',alt:'A friend walking beside a lake beneath a forested limestone mountain',label:'Limestone peaks beside the water',layout:'nature-mountain'},
-{src:'/photos/nature-cattle.jpg',alt:'Two cattle standing beneath trees beside the water',label:'Quiet neighbors along the road',layout:'nature-cattle'},
-{src:'/photos/nature-garden-sunset.jpg',alt:'A peaceful garden glowing beneath a warm Phatthalung sunset',label:'Green spaces at the close of day',layout:'nature-garden'},
-{src:'/photos/nature-rock-pool.jpg',alt:'Friends swimming in a clear rocky pool surrounded by forest',label:'Cool water beneath the trees',layout:'nature-swim'},
-{src:'/photos/nature-mountain-panorama.jpg',alt:'A wide view of forested Phatthalung mountains beneath a dramatic blue sky',label:'A horizon shaped by mountains',layout:'nature-panorama'},
-{src:'/photos/nature-forest-stream.jpg',alt:'A clear forest stream flowing between smooth rocks beneath the trees',label:'Follow the sound of the stream',layout:'nature-stream'},
-{src:'/photos/nature-forest-friends.jpg',alt:'Two friends leaning close together on a green forest path',label:'Friendship feels at home here',layout:'nature-friends'}];
-const starterItems=[
-{icon:'☂',name:'An umbrella',note:'For sun, rain, and everything between.'},
-{icon:'◌',name:'Mosquito spray',note:'A tiny bottle with heroic responsibilities.'},
-{icon:'🥤',name:'An iced coffee',note:'The unofficial fuel of a warm afternoon.'},
-{icon:'⛑',name:'A motorbike helmet',note:'The countryside is best explored safely.'},
-{icon:'🍜',name:'Something delicious',note:'There is always room for one more local favorite.'},
-{icon:'📷',name:'A camera',note:'Because the ordinary views rarely feel ordinary.'},
-{icon:'☺',name:'A good attitude',note:'The one thing every plan needs.'}];
-const adventures=[
-{title:'A country-road ride',note:'Take the long way and let the mountains set the pace.'},
-{title:'A local café stop',note:'Order something cold and stay for the conversation.'},
-{title:'A food adventure',note:'Choose a place that smells good and share everything.'},
-{title:'A waterfall swim',note:'Find cool water beneath the trees.'},
-{title:'An evening market',note:'Follow the lights, music, and something good to eat.'},
-{title:'A mountain walk',note:'Look up, slow down, and enjoy the view.'},
-{title:'Preaching and visiting',note:'Encouragement for us—and for the people we meet.'}];
-const littleThings=[
-{src:'/photos/little-umbrella-flowers.jpg',alt:'A congregation friend standing beneath an umbrella beside bright pink flowers',label:'A little shade on a bright day',layout:'little-tall'},
-{src:'/photos/little-coconut-friends.jpg',alt:'Friends sharing fresh coconuts beneath the palm trees',label:'Fresh coconuts, passed around',layout:'little-wide'},
-{src:'/photos/little-umbrella-group.jpg',alt:'Friends pausing beneath umbrellas on a sunny country road',label:'Prepared for sun, rain, and a good day',layout:'little-wide'},
-{src:'/photos/little-picnic-table.jpg',alt:'Older congregation friends talking together beside an outdoor picnic table',label:'Conversations that stretch through lunch',layout:'little-wide'},
-{src:'/photos/little-village-visit.jpg',alt:'Friends visiting with a neighbor along a quiet village lane',label:'A warm welcome at the gate',layout:'little-tall'},
-{src:'/photos/little-flower-walk.jpg',alt:'Two friends walking together beside a wall of pink flowers',label:'Walking on, still talking',layout:'little-tall'},
-{src:'/photos/little-rice-field-stop.jpg',alt:'A farmer and motorbike resting beneath a large tree beside vivid rice fields',label:'A familiar view worth stopping for',layout:'little-wide'},
-{src:'/photos/little-palm-field-smile.jpg',alt:'A congregation friend smiling beneath a palm beside a green rice field',label:'A wave from the road',layout:'little-tall'},
-{src:'/photos/little-stream-hearts.jpg',alt:'Four congregation friends making heart shapes together beside a forest stream',label:'A little love by the water',layout:'little-wide'}];
-export default function Home(){
-const rail=useRef<HTMLDivElement>(null);
-const adventureTimer=useRef<ReturnType<typeof setInterval>|null>(null);
-const [lightbox,setLightbox]=useState<{src:string;alt:string}|null>(null);
-const [starterCount,setStarterCount]=useState(0);
-const [adventure,setAdventure]=useState(0);
-const [rolling,setRolling]=useState(false);
-const [toolsVisible,setToolsVisible]=useState(false);
-useEffect(()=>{const update=()=>{const hero=document.getElementById('top');setToolsVisible(window.scrollY>(hero?hero.offsetHeight*.6:400))};update();window.addEventListener('scroll',update,{passive:true});window.addEventListener('resize',update);return()=>{window.removeEventListener('scroll',update);window.removeEventListener('resize',update)}},[]);
-const move=(direction:number)=>rail.current?.scrollBy({left:direction*rail.current.clientWidth*.82,behavior:'smooth'});
-const choosePhoto=(target:EventTarget|null)=>{if(!(target instanceof HTMLImageElement)||target.classList.contains('map-graphic')||target.closest('#buffalo-boy'))return;setLightbox({src:target.src,alt:target.alt})};
-const revealStarter=()=>setStarterCount(count=>count>=starterItems.length?0:count+1);
-const chooseAdventure=()=>{if(rolling)return;const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(reduced){setAdventure(current=>(current+1+Math.floor(Math.random()*(adventures.length-1)))%adventures.length);return}setRolling(true);let turns=0;adventureTimer.current=setInterval(()=>{setAdventure(current=>(current+1)%adventures.length);turns+=1;if(turns>=10){if(adventureTimer.current)clearInterval(adventureTimer.current);adventureTimer.current=null;setRolling(false)}},95)};
-useEffect(()=>{const photos=document.querySelectorAll<HTMLImageElement>('main img:not(.map-graphic):not(#buffalo-boy img)');photos.forEach(photo=>{photo.tabIndex=0;photo.setAttribute('role','button');photo.setAttribute('aria-label',`${photo.alt}. Open larger image`)});const close=(event:KeyboardEvent)=>{if(event.key==='Escape')setLightbox(null)};document.addEventListener('keydown',close);return()=>{document.removeEventListener('keydown',close);if(adventureTimer.current)clearInterval(adventureTimer.current)}},[]);
-return <main onClick={event=>choosePhoto(event.target)} onKeyDown={event=>{if(event.target instanceof HTMLImageElement&&(event.key==='Enter'||event.key===' ')){event.preventDefault();choosePhoto(event.target)}}}>
-<nav className="nav shell" aria-label="Main navigation"><a href="#top" className="brand">Friends of <span>Phatthalung</span></a><div className="nav-links"><a href="#together">Together</a><a href="#life-here">Life here</a><a href="#where">Where?</a><a href="#activities">Things to do</a><a href="#nature">Nature</a><a href="#along-the-way">Along the way</a><a href="#memories">Moments</a></div><a className="nav-cta" href="#visit">Come visit <span aria-hidden="true">↓</span></a></nav>
-<section id="top" className="hero"><img className="hero-photo" {...web('/photos/main-congregation.jpg','100vw')} alt="The Phatthalung congregation gathered together for a picnic" fetchPriority="high"/><div className="hero-overlay"/><div className="hero-content shell"><p className="eyebrow"><span/> PHATTHALUNG, THAILAND</p><h1>A small congregation.<br/><em>One warm family.</em></h1><p>United by our love for Jehovah and for one another, we share the work, the laughter, the meals, and the beauty of life here in Phatthalung.</p><a className="button light" href="#together">Meet us through our moments <span aria-hidden="true">↓</span></a></div></section>
-<section id="together" className="together shell"><header className="section-heading"><div><p className="kicker"><span>01</span> TOGETHER IN THE THINGS THAT MATTER</p><h2>Small in number,<br/><em>rich in friendship.</em></h2></div><p>Our congregation may be small, but no one stands alone. Whether we are sharing in the ministry, helping one another, or pausing for something delicious, there is a quiet joy in doing it together.</p></header><div className="story-grid"><figure className="story-main"><img {...web('/photos/cheerful-congregation.jpg','(max-width: 760px) 100vw, 66vw')} alt="Congregation friends sharing a cheerful moment together" loading="lazy" decoding="async"/><figcaption><strong>One congregation</strong><span>Different ages and backgrounds, united in love for Jehovah and for one another.</span></figcaption></figure><div className="story-note"><span className="sun-mark" aria-hidden="true">✦</span><blockquote>“How good and how pleasant it is for brothers to dwell together in unity!”</blockquote><cite>Psalm 133:1</cite></div><figure className="story-side"><img {...web('/photos/rice-field-friends.jpg','(max-width: 760px) 100vw, 34vw')} alt="Friends walking side by side through vivid green rice fields" loading="lazy" decoding="async"/><figcaption>Sharing the work and the road together</figcaption></figure></div></section>
-<section id="life-here" className="place-section"><div className="shell"><header className="place-heading"><div><p className="kicker"><span>02</span> THE PLACE WE CALL HOME</p><h2>Faith and friendship,<br/><em>rooted in Phatthalung.</em></h2></div><p>Lotus water, limestone mountains, village roads, and favorite local stops form the backdrop to our life and ministry.</p></header><div className="place-collage"><figure className="field"><img {...web('/photos/village-wheel.jpg','(max-width: 760px) 100vw, 66vw')} alt="A vintage village Ferris wheel with Phatthalung mountains beyond" loading="lazy" decoding="async"/><figcaption>A little surprise around the corner</figcaption></figure><figure className="sunset"><img {...web('/photos/lotus-scene.jpg','(max-width: 760px) 50vw, 34vw')} alt="Pink lotus flowers stretching across the water at Thale Noi" loading="lazy" decoding="async"/><figcaption>Lotus mornings at Thale Noi</figcaption></figure><figure className="mountain"><img {...web('/photos/phatthalung-mountain.jpg','(max-width: 760px) 50vw, 34vw')} alt="A distinctive limestone mountain beneath bright Phatthalung skies" loading="lazy" decoding="async"/><figcaption>Phatthalung’s unmistakable landscape</figcaption></figure></div></div></section>
-<section id="where" className="where-section"><div className="shell where-grid"><figure className="map-card"><div className="map-frame"><img className="map-graphic" src="/phatthalung-map.svg" alt="Focused map of southern Thailand highlighting Phatthalung province" width="1052" height="1850" decoding="async"/><span className="map-marker" aria-hidden="true"><i/>Phatthalung</span></div><figcaption><span>THAILAND</span><strong>Phatthalung</strong><small>Southern Thailand · west of Songkhla Lake</small></figcaption></figure><div className="where-copy"><p className="kicker"><span>03</span> WHERE IS PHATTHALUNG?</p><h2>A quieter corner<br/><em>of southern Thailand.</em></h2><p>Phatthalung lies in Thailand’s far south, beside the western shore of Songkhla Lake and at the foot of the unmistakable Khao Ok Thalu mountain. It is a place of wetlands, rice fields, limestone peaks, village roads, and deeply rooted local traditions.</p><div className="travel-grid"><div><span aria-hidden="true">✦</span><strong>By train</strong><p>Phatthalung town is served by Thailand’s southern railway, making the journey itself part of the experience.</p></div><div><span aria-hidden="true">✦</span><strong>By air + road</strong><p>Fly to Hat Yai or Trang, then continue by car or local transport into Phatthalung.</p></div><div><span aria-hidden="true">✦</span><strong>By road</strong><p>Highway 41 links the province with the main north–south route through southern Thailand.</p></div></div><a className="map-link" href="https://www.tourismthailand.org/Destinations/Provinces/Phatthalung/349" target="_blank" rel="noreferrer">Explore Phatthalung with Tourism Thailand ↗</a></div></div><p className="map-credit shell">Locator map adapted from NordNordWest, Wikimedia Commons (GFDL).</p></section>
-<section className="starter-section" aria-labelledby="starter-title"><div className="shell starter-grid"><div className="starter-copy"><p className="surprise-label">A LITTLE PHATTHALUNG SURPRISE</p><h2 id="starter-title">The Phatthalung<br/><em>starter pack.</em></h2><p>Tap the pack and see what we seem to carry everywhere.</p><button className="starter-button" onClick={event=>{event.stopPropagation();revealStarter()}} aria-controls="starter-items">{starterCount===0?'Open the starter pack':starterCount===starterItems.length?'Reset the pack':'Pack one more'} <span aria-hidden="true">{starterCount===starterItems.length?'↺':'+'}</span></button></div><div id="starter-items" className="starter-card" aria-live="polite"><div className="starter-badge" aria-hidden="true">🎒</div>{starterCount===0?<p className="starter-empty">Seven small essentials.<br/>One good day ahead.</p>:<div className="starter-list">{starterItems.slice(0,starterCount).map((item,index)=><div className="starter-item" key={item.name}><span aria-hidden="true">{item.icon}</span><p><strong>{item.name}</strong><small>{item.note}</small></p><i>{String(index+1).padStart(2,'0')}</i></div>)}</div>}</div></div></section>
-<section id="activities" className="activities-section"><div className="shell"><header className="activities-heading"><div><p className="kicker"><span>04</span> A DAY OUT, PHATTHALUNG STYLE</p><h2>What to do<br/><em>in Phatthalung?</em></h2></div><p>Follow a side street, take the train, ride beneath the mountains, find a market after dark, or settle around a table. The best plan is often simply choosing somewhere to go—and bringing friends.</p></header><div className="activity-prompts" aria-label="Activity ideas"><span>Explore the town</span><span>Ride the local roads</span><span>Visit markets &amp; events</span><span>Eat, drink &amp; linger</span></div><div className="activities-grid">{activityPhotos.map(photo=><figure className={photo.layout||''} key={photo.src}><img {...web(photo.src,'(max-width: 760px) 50vw, 25vw')} alt={photo.alt} loading="lazy" decoding="async"/><figcaption>{photo.label}</figcaption></figure>)}</div></div></section>
-<section id="only-here" className="only-section"><div className="shell"><header className="only-heading"><div><p className="kicker"><span>05</span> ONLY IN PHATTHALUNG…</p><h2>You had to<br/><em>be there.</em></h2></div><p>Some moments do not need much explaining. A cave window over town, a cow beneath a cliff, a summit dinosaur—Phatthalung has its own wonderful sense of humor.</p></header><div className="only-grid"><figure className="only-card only-cave"><img {...web('/photos/only-cave-window.jpg','(max-width: 760px) 100vw, 34vw')} alt="A cave opening framing a high view over Phatthalung town" loading="lazy" decoding="async"/><figcaption>A window in the mountain</figcaption></figure><figure className="only-card only-dinosaur"><img {...web('/photos/dinosaur-summit.jpg','(max-width: 760px) 100vw, 34vw')} alt="A playful dinosaur costume at a Phatthalung mountain summit" loading="lazy" decoding="async"/><figcaption>Yes, the dinosaur made it to the top</figcaption></figure><figure className="only-card only-cow"><img {...web('/photos/only-cow-cliff.jpg','(max-width: 760px) 100vw, 34vw')} alt="A small cow standing beneath a broad limestone cliff" loading="lazy" decoding="async"/><figcaption>Local scale: cow for reference</figcaption></figure><figure className="only-card only-video"><video controls muted playsInline preload="none" poster="/videos/phatthalung-postcard-one-poster.webp" aria-label="A short moving postcard from Phatthalung"><source src="/videos/phatthalung-postcard-one.mp4" type="video/mp4"/>Your browser does not support this short video.</video><figcaption>A tiny moving postcard</figcaption></figure></div></div></section>
-<section id="nature" className="nature-section"><div className="shell"><header className="nature-heading"><div><p className="kicker"><span>06</span> WILDLIFE &amp; NATURE</p><h2>Life grows<br/><em>all around us.</em></h2></div><p>Water, forest, gardens, limestone peaks, and the animals we meet along the way give Phatthalung its gentle rhythm. There is always something worth noticing when we slow down.</p></header><div className="nature-grid">{naturePhotos.map(photo=><figure className={photo.layout} key={photo.src}><img {...web(photo.src,'(max-width: 760px) 100vw, 50vw')} alt={photo.alt} loading="lazy" decoding="async"/><figcaption>{photo.label}</figcaption></figure>)}</div><div className="nature-notes"><p><strong>Look toward the peaks</strong><span>Limestone mountains rise suddenly above fields, roads, and water.</span></p><p><strong>Notice everyday wildlife</strong><span>Animals are part of the landscape, often just beyond the roadside.</span></p><p><strong>Stay for the evening light</strong><span>Gardens and green spaces soften as the sun goes down.</span></p></div></div></section>
-<section id="along-the-way" className="day-section"><div className="shell"><header className="day-heading"><div><p className="kicker"><span>07</span> ALONG THE WAY</p><h2>Ordinary days,<br/><em>shared with joy.</em></h2></div><p>Much of our life together happens between destinations—on village roads, beneath umbrellas, beside garden flowers, and in the conversations that make a long day feel light.</p></header><div className="day-collage"><figure className="day-wide"><img {...web('/photos/ministry-street-group.jpg','(max-width: 760px) 100vw, 66vw')} alt="A joyful congregation group together on a Phatthalung street" loading="lazy" decoding="async"/><figcaption>Ready to share a good day together</figcaption></figure><figure className="day-portrait"><img {...web('/photos/banana-road.jpg','(max-width: 760px) 100vw, 34vw')} alt="Friends walking under umbrellas along a sunny banana-lined road" loading="lazy" decoding="async"/><figcaption>Shade, stories, and the road ahead</figcaption></figure><figure><img {...web('/photos/flower-friends.jpg','(max-width: 760px) 50vw, 34vw')} alt="Two friends smiling together among bright orange flowers" loading="lazy" decoding="async"/><figcaption>Friendship in full color</figcaption></figure><figure><img {...web('/photos/scooter-smiles.jpg','(max-width: 760px) 50vw, 34vw')} alt="Two friends smiling together on a motorbike" loading="lazy" decoding="async"/><figcaption>Getting there together</figcaption></figure><figure><img {...web('/photos/garden-greens.jpg','(max-width: 760px) 50vw, 34vw')} alt="Friends happily gathering fresh greens beside a country road" loading="lazy" decoding="async"/><figcaption>Little gifts from the garden</figcaption></figure><figure><img {...web('/photos/resting-together.jpg','(max-width: 760px) 50vw, 34vw')} alt="Two friends resting and laughing together after a warm day" loading="lazy" decoding="async"/><figcaption>Time to pause</figcaption></figure><figure className="day-night"><img {...web('/photos/moon-mountain.jpg','(max-width: 760px) 50vw, 34vw')} alt="A friend framing the moon above a Phatthalung mountain" loading="lazy" decoding="async"/><figcaption>Wonder at the end of the day</figcaption></figure><figure><img {...web('/photos/green-rice-fields.jpg','(max-width: 760px) 50vw, 34vw')} alt="Vivid green rice fields stretching toward the Phatthalung mountains" loading="lazy" decoding="async"/><figcaption>Green horizons close to home</figcaption></figure><figure className="day-sunset"><img {...web('/photos/sunset-town.jpg','(max-width: 760px) 50vw, 34vw')} alt="A vivid sunset glowing above Phatthalung town" loading="lazy" decoding="async"/><figcaption>Evenings painted in color</figcaption></figure><figure className="day-road"><img {...web('/photos/village-walk.jpg','(max-width: 760px) 100vw, 66vw')} alt="Two friends walking together down a peaceful village road" loading="lazy" decoding="async"/><figcaption>Side by side, all the way home</figcaption></figure></div></div></section>
-<section className="adventure-section" aria-labelledby="adventure-title"><div className="shell adventure-grid"><div className="adventure-copy"><p className="surprise-label">SO, WHAT ARE WE DOING TODAY?</p><h2 id="adventure-title">Let Phatthalung<br/><em>choose the plan.</em></h2><p>No pressure. The best days here often begin with one simple idea and a few friends who are ready to go.</p></div><div className="adventure-picker"><p className="adventure-overline">TODAY’S PLAN</p><div className={rolling?'adventure-result is-rolling':'adventure-result'} aria-live="polite" aria-atomic="true"><strong>{adventures[adventure].title}</strong><span>{adventures[adventure].note}</span></div><button onClick={event=>{event.stopPropagation();chooseAdventure()}} disabled={rolling}>{rolling?'Choosing…':'Choose our adventure'} <span aria-hidden="true">→</span></button></div></div></section>
-<section id="little-things" className="little-section"><div className="shell"><header className="little-heading"><div><p className="kicker"><span>08</span> LITTLE THINGS WE LOVE</p><h2>The everyday things<br/><em>that feel like home.</em></h2></div><p>Shared shade, cold drinks, roadside lunches, long conversations, and a wave across the rice fields—the small things are often the ones we remember most.</p></header><div className="little-grid">{littleThings.slice(0,5).map(photo=><figure className={photo.layout} key={photo.src}><img {...web(photo.src,'(max-width: 760px) 100vw, 50vw')} alt={photo.alt} loading="lazy" decoding="async"/><figcaption>{photo.label}</figcaption></figure>)}<figure className="little-video"><video controls muted playsInline preload="none" poster="/videos/phatthalung-postcard-two-poster.webp" aria-label="A short congregation moment in Phatthalung"><source src="/videos/phatthalung-postcard-two.mp4" type="video/mp4"/>Your browser does not support this short video.</video><figcaption>One more moment in motion</figcaption></figure>{littleThings.slice(5).map(photo=><figure className={photo.layout} key={photo.src}><img {...web(photo.src,'(max-width: 760px) 100vw, 50vw')} alt={photo.alt} loading="lazy" decoding="async"/><figcaption>{photo.label}</figcaption></figure>)}</div></div></section>
-<section id="memories" className="memories shell"><div className="gallery-heading"><div><p className="kicker"><span>09</span> SHARED MOMENTS</p><h2>Work, laughter,<br/><em>food, and friendship.</em></h2></div><div className="gallery-actions"><button onClick={()=>move(-1)} aria-label="Previous photos">←</button><button onClick={()=>move(1)} aria-label="Next photos">→</button></div></div><div className="gallery-rail" ref={rail} aria-label="Shared memories photo gallery">{gallery.map((photo,index)=><figure className="gallery-card" key={photo.src}><img {...web(photo.src,'(max-width: 760px) 78vw, 420px')} alt={photo.alt} loading="lazy" decoding="async"/><figcaption><span>{String(index+1).padStart(2,'0')}</span>{photo.label}</figcaption></figure>)}</div><p className="gallery-note">The best moments are rarely complicated—time together, a shared meal, a beautiful view, and plenty of laughter.</p></section>
-<BuffaloBoyGame/>
-<section className="closing"><img {...web('/photos/group-walk.jpg','100vw')} alt="Congregation friends walking together through the Phatthalung countryside" loading="lazy" decoding="async"/><div className="closing-overlay"/><div className="closing-copy"><p className="kicker">OUR CONGREGATION FAMILY</p><h2>Wherever the road leads,<br/><em>we walk it together.</em></h2><p>We are grateful for our small, united congregation and for every ordinary day Jehovah gives us to encourage one another.</p></div></section>
-<section id="visit" className="visit-section"><div className="shell visit-grid"><figure className="visit-photo"><img {...web('/photos/come-visit-congregation.jpg','(max-width: 760px) 100vw, 50vw')} alt="Friends of the Phatthalung congregation gathered outside their Kingdom Hall" loading="lazy" decoding="async"/><figcaption>There is always room for one more.</figcaption></figure><div className="visit-copy"><p className="kicker"><span>10</span> COME AND VISIT</p><h2>Come and meet<br/><em>our congregation.</em></h2><p>You would be warmly welcomed at one of our meetings in Phatthalung. To find the current meeting location, schedule, and contact information, use the <strong>Find a Meeting</strong> feature on JW.ORG.</p><p className="visit-contact-note">Planning a visit or have a question? Get in touch with us.</p><div className="visit-actions"><a className="visit-button" href="https://www.jw.org/en/jehovahs-witnesses/meetings/" target="_blank" rel="noreferrer">Find a meeting on JW.ORG <span aria-hidden="true">↗</span></a><a className="visit-button" href="mailto:visit@friendsofphatthalung.com">Contact us about visiting <svg className="mail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.75 5.75h16.5v12.5H3.75z"/><path d="m4.5 7 7.5 6 7.5-6"/></svg></a></div></div></div></section>
-<footer className="footer shell"><a href="#top" className="brand">Friends of <span>Phatthalung</span></a><p>A warm collection of congregation life in Phatthalung, Thailand.</p><a href="#top">Back to top ↑</a></footer>
-<div className={toolsVisible?'page-tools':'page-tools is-tucked'} aria-label="Page navigation"><details className="section-jump"><summary><span aria-hidden="true">☰</span><span className="section-jump-label">Sections</span></summary><nav aria-label="Jump to a section" onClick={event=>{const menu=event.currentTarget.closest('details');if(menu)menu.open=false}}><a href="#together">Together</a><a href="#life-here">Life here</a><a href="#where">Where is Phatthalung?</a><a href="#activities">Things to do</a><a href="#only-here">Only in Phatthalung</a><a href="#nature">Nature</a><a href="#along-the-way">Along the way</a><a href="#little-things">Little things we love</a><a href="#memories">Shared moments</a><a href="#buffalo-boy">Buffalo Boy</a><a href="#visit">Come and visit</a></nav></details><a className="floating-top" href="#top" aria-label="Back to the top"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></a></div>
-{lightbox&&<div className="lightbox" role="dialog" aria-modal="true" aria-label="Enlarged photo" onClick={event=>{event.stopPropagation();if(event.target===event.currentTarget)setLightbox(null)}}><button className="lightbox-close" onClick={()=>setLightbox(null)} aria-label="Close enlarged photo">×</button><img src={lightbox.src} alt={lightbox.alt}/><p>{lightbox.alt}</p></div>}
-</main>}
+// Home page: a short front door. The full photo galleries live on their own
+// pages (/things-to-do, /nature, /moments) and the game on /play; here each
+// gallery gets one swipeable row and a "see all" link.
+import FunCards from '../components/FunCards';
+import PageTools from '../components/PageTools';
+import PhotoRail from '../components/PhotoRail';
+import StoryBubbles from '../components/StoryBubbles';
+import ZoomMain from '../components/ZoomMain';
+import { SiteFooter, SiteNav, VisitSection, ZoomImg } from '../components/site';
+import { activityPhotos, alongTheWay, galleryBySlug, lifeHere, littleThings, naturePhotos, onlyHere, pick, sharedMoments, together, web } from './photos';
+
+const thingsPreview = pick(activityPhotos, ['activity-rice-field-riders', 'activity-mural-walk', 'activity-night-market', 'activity-lakeside-cafe', 'activity-train-station', 'activity-mountain-coffee-cart', 'activity-coffee-carnival', 'little-pad-thai-view']);
+const naturePreview = [lifeHere[1], ...pick(naturePhotos, ['nature-mountain-walk', 'nature-rock-pool', 'nature-cattle']), lifeHere[0], ...pick(naturePhotos, ['nature-mountain-panorama', 'nature-forest-stream']), onlyHere[1]];
+const momentsPreview = [alongTheWay[0], littleThings[8], alongTheWay[1], ...pick(sharedMoments, ['table-feast', 'sunflower-group', 'memory-heart-selfie']), littleThings[1], alongTheWay[6]];
+
+const homeTools = [
+  { href: '#together', label: 'Together' },
+  { href: '#where', label: 'Where is Phatthalung?' },
+  { href: '#preview-things-to-do', label: 'Things to do' },
+  { href: '#preview-nature', label: 'Nature' },
+  { href: '#preview-moments', label: 'Moments' },
+  { href: '#fun', label: 'Starter pack & games' },
+  { href: '#visit', label: 'Come and visit' },
+  { href: 'galleries', label: 'Full galleries', divider: true },
+  { href: '/things-to-do', label: 'Things to do gallery' },
+  { href: '/nature', label: 'Nature gallery' },
+  { href: '/moments', label: 'Moments gallery' },
+  { href: '/play', label: 'Play Buffalo Boy' },
+];
+
+export default function Home() {
+  return (
+    <ZoomMain>
+      <SiteNav overlay />
+      <section id="top" className="hero">
+        <img className="hero-photo" {...web('/photos/main-congregation.jpg', '100vw')} alt="The Phatthalung congregation gathered together for a picnic" fetchPriority="high" data-zoom="" data-caption="Our congregation family" />
+        <div className="hero-overlay" />
+        <div className="hero-content shell">
+          <p className="eyebrow"><span /> PHATTHALUNG, THAILAND</p>
+          <h1>A small congregation.<br /><em>One warm family.</em></h1>
+          <p>United by our love for Jehovah and for one another, we share the work, the laughter, the meals, and the beauty of life here in Phatthalung.</p>
+          <a className="button light" href="#start">Meet us through our moments <span aria-hidden="true">↓</span></a>
+        </div>
+      </section>
+
+      <section id="start" className="start-band" aria-label="Start here">
+        <div className="shell start-grid">
+          <div>
+            <p className="start-hint">Tap a circle for a quick photo story</p>
+            <StoryBubbles />
+          </div>
+          <div className="quick-visit">
+            <p><strong>Visiting Phatthalung?</strong> You’d be warmly welcomed at our meetings.</p>
+            <a href="#visit">How to find us <span aria-hidden="true">↓</span></a>
+          </div>
+        </div>
+      </section>
+
+      <section id="together" className="together shell">
+        <header className="section-heading">
+          <div>
+            <p className="kicker"><span>01</span> TOGETHER IN THE THINGS THAT MATTER</p>
+            <h2>Small in number,<br /><em>rich in friendship.</em></h2>
+          </div>
+          <p>Our congregation may be small, but no one stands alone. Whether we are sharing in the ministry, helping one another, or pausing for something delicious, there is a quiet joy in doing it together.</p>
+        </header>
+        <div className="story-grid" data-zoom-group="">
+          <figure className="story-main">
+            <ZoomImg photo={together[0]} sizes="(max-width: 760px) 100vw, 66vw" />
+            <figcaption><strong>One congregation</strong><span>Different ages and backgrounds, united in love for Jehovah and for one another.</span></figcaption>
+          </figure>
+          <div className="story-note">
+            <span className="sun-mark" aria-hidden="true">✦</span>
+            <blockquote>“How good and how pleasant it is for brothers to dwell together in unity!”</blockquote>
+            <cite>Psalm 133:1</cite>
+          </div>
+          <figure className="story-side">
+            <ZoomImg photo={together[1]} sizes="(max-width: 760px) 100vw, 34vw" />
+            <figcaption>{together[1].label}</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="where" className="where-section">
+        <div className="shell where-grid">
+          <figure className="map-card">
+            <div className="map-frame">
+              <img className="map-graphic" src="/phatthalung-map.svg" alt="Focused map of southern Thailand highlighting Phatthalung province" width="1052" height="1850" decoding="async" />
+              <span className="map-marker" aria-hidden="true"><i />Phatthalung</span>
+            </div>
+            <figcaption><span>THAILAND</span><strong>Phatthalung</strong><small>Southern Thailand · west of Songkhla Lake</small></figcaption>
+          </figure>
+          <div className="where-copy">
+            <p className="kicker"><span>02</span> WHERE IS PHATTHALUNG?</p>
+            <h2>A quieter corner<br /><em>of southern Thailand.</em></h2>
+            <p>Phatthalung lies in Thailand’s far south, beside the western shore of Songkhla Lake and at the foot of the unmistakable Khao Ok Thalu mountain. It is a place of wetlands, rice fields, limestone peaks, village roads, and deeply rooted local traditions.</p>
+            <details className="travel-details">
+              <summary>Getting here <small>by train, air or road</small><span aria-hidden="true">+</span></summary>
+              <div className="travel-grid">
+                <div><span aria-hidden="true">✦</span><strong>By train</strong><p>Phatthalung town is served by Thailand’s southern railway, making the journey itself part of the experience.</p></div>
+                <div><span aria-hidden="true">✦</span><strong>By air + road</strong><p>Fly to Hat Yai or Trang, then continue by car or local transport into Phatthalung.</p></div>
+                <div><span aria-hidden="true">✦</span><strong>By road</strong><p>Highway 41 links the province with the main north–south route through southern Thailand.</p></div>
+              </div>
+              <a className="map-link" href="https://www.tourismthailand.org/Destinations/Provinces/Phatthalung/349" target="_blank" rel="noreferrer">Explore Phatthalung with Tourism Thailand ↗</a>
+            </details>
+          </div>
+        </div>
+        <p className="map-credit shell">Locator map adapted from NordNordWest, Wikimedia Commons (GFDL).</p>
+      </section>
+
+      <PhotoRail gallery={galleryBySlug('things-to-do')} photos={thingsPreview} number="03" tone="sand" />
+      <PhotoRail gallery={galleryBySlug('nature')} photos={naturePreview} number="04" tone="sage" />
+      <PhotoRail gallery={galleryBySlug('moments')} photos={momentsPreview} number="05" tone="forest" />
+
+      <FunCards />
+
+      <section className="closing">
+        <img {...web('/photos/group-walk.jpg', '100vw')} alt="Congregation friends walking together through the Phatthalung countryside" loading="lazy" decoding="async" data-zoom="" data-caption="Wherever the road leads" />
+        <div className="closing-overlay" />
+        <div className="closing-copy">
+          <p className="kicker">OUR CONGREGATION FAMILY</p>
+          <h2>Wherever the road leads,<br /><em>we walk it together.</em></h2>
+          <p>We are grateful for our small, united congregation and for every ordinary day Jehovah gives us to encourage one another.</p>
+        </div>
+      </section>
+
+      <VisitSection />
+      <SiteFooter />
+      <PageTools links={homeTools} visitHref="#visit" />
+    </ZoomMain>
+  );
+}
