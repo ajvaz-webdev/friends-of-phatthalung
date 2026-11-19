@@ -639,6 +639,8 @@ export default function BuffaloBoyGame() {
   const nativeFullscreenRef = useRef(false);
   const [focus, setFocus] = useState(false);
   const [portraitPhone, setPortraitPhone] = useState(false);
+  const [touchScreen, setTouchScreen] = useState(false);
+  const [sidewaysPhone, setSidewaysPhone] = useState(false);
   const [rotateTipClosed, setRotateTipClosed] = useState(false);
   const [artReady, setArtReady] = useState(false);
   const [artFailed, setArtFailed] = useState(false);
@@ -898,13 +900,26 @@ export default function BuffaloBoyGame() {
   }, []);
 
   useEffect(() => {
+    const touch = window.matchMedia('(pointer: coarse)');
+    const sideways = window.matchMedia('(orientation: landscape) and (pointer: coarse) and (max-height: 620px)');
+    const sync = () => { setTouchScreen(touch.matches); setSidewaysPhone(sideways.matches); };
+    sync();
+    touch.addEventListener('change', sync);
+    sideways.addEventListener('change', sync);
+    return () => { touch.removeEventListener('change', sync); sideways.removeEventListener('change', sync); };
+  }, []);
+
+  useEffect(() => {
     const query = window.matchMedia('(orientation: portrait) and (pointer: coarse) and (max-width: 760px)');
     let wasPortrait = query.matches;
     setPortraitPhone(query.matches);
     const update = () => {
       setPortraitPhone(query.matches);
       // Turned sideways mid-game without full screen: bring the game into view.
-      if (wasPortrait && !query.matches && modeRef.current === 'playing') cardRef.current?.scrollIntoView({ block: 'center' });
+      if (wasPortrait && !query.matches && modeRef.current === 'playing') {
+        // Wait for the "tap Full screen" reminder above the card to appear, then show it too.
+        setTimeout(() => (cardRef.current?.previousElementSibling ?? cardRef.current)?.scrollIntoView({ block: 'start' }), 80);
+      }
       wasPortrait = query.matches;
     };
     query.addEventListener('change', update);
@@ -1047,6 +1062,12 @@ export default function BuffaloBoyGame() {
           <output aria-label="Test input status">{hud.replay ? 'REPLAY' : 'MANUAL'} · {hud.controls} · x {Math.round(hud.x)} · y {Math.round(hud.y)}</output>
         </div>}
 
+        {sidewaysPhone && !focus && (
+          <div className={styles.fullscreenNudge} role="status">
+            <p><strong>Playing sideways?</strong> Tap Full screen first for the sideways layout.</p>
+            <button type="button" onClick={enterFocus}>Full screen</button>
+          </div>
+        )}
         <div ref={cardRef} className={`${styles.gameCard} ${focus ? styles.focusMode : ''}`} data-game-input onContextMenu={event => event.preventDefault()} onDragStart={event => event.preventDefault()}>
           <div className={styles.gameBar}>
             <div><span className={styles.statusDot}/><strong>BUFFALO BOY</strong><small>{level.name.toUpperCase()}</small></div>
@@ -1080,7 +1101,7 @@ export default function BuffaloBoyGame() {
                   <button type="button" disabled={!artReady} onClick={() => begin(0)}>{artReady ? 'Start Adventure →' : artFailed ? 'Please reload to load the artwork' : 'Getting the journey ready…'}</button>
                   {artReady && !focus && <button type="button" className={styles.overlaySecondary} onClick={() => { enterFocus(); begin(0); }}>Play full screen</button>}
                 </span>
-                {portraitPhone && !focus && <small className={styles.sidewaysNote}><span className={styles.rotateIcon} aria-hidden="true"/>Best played full screen, with your phone sideways</small>}
+                {touchScreen && !focus && <small className={styles.sidewaysNote}><span className={styles.rotateIcon} aria-hidden="true"/><span><b>Tip:</b> tap <b>Play full screen</b> first, then turn your phone sideways.</span></small>}
                 <small className={styles.legend}><span>✦ Collect</span><span>! Danger</span><span>↕ Highlighted = interactive</span></small>
                 <small>3 levels · Checkpoints along the way</small>
               </div>
