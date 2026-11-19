@@ -663,3 +663,5 @@ img[data-zoom]:focus-visible{outline:3px solid #f0b977;outline-offset:-3px}
 .play-top{padding-top:30px}
 @media(max-width:760px){.keep-exploring{padding:56px 0}.explore-card{min-height:220px}.visit-band{padding:56px 0}.play-top{padding-top:20px}.play-top .back-home{margin-bottom:0}}
 .nav-solid .brand span{color:var(--clay)}
+/* Hide the floating page buttons while Buffalo Boy is full screen. */
+body.game-focus .page-tools{display:none}
