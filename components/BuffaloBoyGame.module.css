@@ -598,25 +598,25 @@
 }
 
 @media (min-width: 560px) and (max-height: 620px) and (orientation: landscape) {
-  .gameCard:has(.viewportPlaying) {
+  .gameCard:not(.focusMode):has(.viewportPlaying) {
     display: grid;
     grid-template-columns: minmax(245px, .6fr) minmax(0, 1fr);
     column-gap: 12px;
     padding: 8px;
   }
-  .gameCard:has(.viewportPlaying) .gameBar { grid-column: 1; grid-row: 1; min-height: 40px; padding: 0 6px; gap: 8px; }
-  .gameCard:has(.viewportPlaying) .gameBar strong { font-size: 9px; }
-  .gameCard:has(.viewportPlaying) .gameBar small { display: none; }
-  .gameCard:has(.viewportPlaying) .soundButton { min-width: 79px; min-height: 35px; font-size: 8px; }
-  .gameCard:has(.viewportPlaying) .hud { grid-column: 1; grid-row: 2; padding: 6px; font-size: 10px; }
-  .gameCard:has(.viewportPlaying) .hudTop { flex-wrap: wrap; padding: 6px; gap: 6px; }
-  .gameCard:has(.viewportPlaying) .powerHud { width: 100%; }
-  .gameCard:has(.viewportPlaying) .controls { grid-column: 1; grid-row: 3; grid-template-columns: 1fr auto; gap: 7px; padding: 8px 0 0; }
-  .gameCard:has(.viewportPlaying) .controls > p { display: none; }
-  .gameCard:has(.viewportPlaying) .moveControls { gap: 7px; }
-  .gameCard:has(.viewportPlaying) .controls button { min-width: 56px; min-height: 56px; }
-  .gameCard:has(.viewportPlaying) .jumpButton { min-width: 80px !important; }
-  .gameCard:has(.viewportPlaying) .viewportPlaying { grid-column: 2; grid-row: 1 / span 3; align-self: center; width: min(100%, calc((100svh - 38px) * 4 / 3)); }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .gameBar { grid-column: 1; grid-row: 1; min-height: 40px; padding: 0 6px; gap: 8px; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .gameBar strong { font-size: 9px; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .gameBar small { display: none; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .soundButton { min-width: 79px; min-height: 35px; font-size: 8px; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .hud { grid-column: 1; grid-row: 2; padding: 6px; font-size: 10px; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .hudTop { flex-wrap: wrap; padding: 6px; gap: 6px; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .powerHud { width: 100%; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .controls { grid-column: 1; grid-row: 3; grid-template-columns: 1fr auto; gap: 7px; padding: 8px 0 0; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .controls > p { display: none; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .moveControls { gap: 7px; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .controls button { min-width: 56px; min-height: 56px; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .jumpButton { min-width: 80px !important; }
+  .gameCard:not(.focusMode):has(.viewportPlaying) .viewportPlaying { grid-column: 2; grid-row: 1 / span 3; align-self: center; width: min(100%, calc((100svh - 38px) * 4 / 3)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -625,4 +625,97 @@
   .controls button:active:not(:disabled) {
     transform: none;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Full-screen play. The card covers the whole screen; upright it stacks
+   (bar, HUD, game, controls); sideways the game sits in the middle with
+   ← → under the left thumb and JUMP under the right thumb.
+   ------------------------------------------------------------------------ */
+.shell:has(.focusMode) { z-index: 90; }
+
+.barButtons { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; }
+.focusButton { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; padding: 0 13px; color: #173c32; background: #f0b977; border-color: #f0b977; }
+.focusButton:hover, .focusButton:focus-visible { color: #173c32; background: #ffd196; }
+.focusButton svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+.startButtons { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 10px; }
+.overlay .overlaySecondary { color: #ffe4b4; background: rgba(13, 37, 32, .55); border: 1px solid rgba(255, 228, 180, .6); }
+.overlay .overlaySecondary:hover, .overlay .overlaySecondary:focus-visible { color: #173c32; }
+.sidewaysNote { display: inline-flex !important; align-items: center; gap: 9px; margin-top: 12px; color: #ffe4b4; font: 600 11px/1.4 Arial, sans-serif; }
+.sidewaysNote .rotateIcon { width: 12px; height: 19px; border-width: 2px; border-color: #ffe4b4; border-radius: 3px; }
+
+.rotateIcon { flex: 0 0 auto; display: inline-block; width: 22px; height: 36px; border: 3px solid #173c32; border-radius: 5px; animation: rotate-phone 2.4s ease-in-out infinite; }
+@keyframes rotate-phone { 0%, 22% { transform: rotate(0deg); } 50%, 80% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
+
+.rotateTip { position: absolute; z-index: 6; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 66px); transform: translateX(-50%); width: min(340px, calc(100% - 24px)); display: flex; align-items: center; gap: 14px; padding: 14px 14px 14px 18px; color: #173c32; background: #f6ead8; border-radius: 14px; box-shadow: 0 18px 50px rgba(0, 0, 0, .45); }
+.rotateTip p { margin: 0; font: 14px/1.4 Georgia, serif; }
+.rotateTip strong { display: block; font-size: 16px; }
+.rotateTip button { flex: 0 0 auto; min-height: 40px; padding: 0 12px; border: 1px solid rgba(23, 60, 50, .3); border-radius: 99px; background: transparent; color: #173c32; font: 700 10px/1 Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+
+.gameCard.focusMode {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.gameCard.focusMode:fullscreen { width: 100vw; height: 100vh; }
+.focusMode .viewport, .focusMode .viewportPlaying { width: min(100%, calc((100dvh - 300px) * 4 / 3)); min-width: min(100%, 280px); margin-inline: auto; flex: 0 0 auto; }
+.focusMode .controls { margin-top: auto; padding-bottom: 4px; }
+.focusMode .controls button { min-height: 70px; min-width: 76px; }
+.focusMode .jumpButton { min-width: 112px !important; }
+
+@media (orientation: landscape) {
+  .gameCard.focusMode {
+    display: grid;
+    grid-template-columns: minmax(118px, 1fr) auto minmax(118px, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    column-gap: 12px;
+    overflow: hidden;
+  }
+  .focusMode .gameBar { grid-column: 1; grid-row: 1; flex-direction: column; align-items: stretch; gap: 8px; min-height: 0; padding: 2px 0 0; }
+  .focusMode .gameBar small { display: none; }
+  .focusMode .barButtons { flex-direction: column; align-items: stretch; gap: 6px; }
+  .focusMode .soundButton { min-height: 36px; min-width: 0; font-size: 8px; }
+  .focusMode .hud { grid-column: 3; grid-row: 1 / span 2; align-self: start; min-height: 0; padding: 2px 0 0; font-size: 10px; }
+  .focusMode .hudTop { flex-wrap: wrap; gap: 4px 8px; padding: 6px 8px; font-size: 10px; }
+  .focusMode .hudTop > span:last-child { width: 100%; font-size: 9px; }
+  .focusMode .hearts { font-size: 15px; }
+  .focusMode .journey { padding: 6px 8px; gap: 6px; font-size: 7px; }
+  .focusMode .powerHud { width: 100%; padding: 5px 8px 5px 34px; margin-top: 6px; }
+  .focusMode .powerIcon { left: 5px; top: 5px; width: 22px; height: 27px; }
+  .focusMode .powerHud strong, .focusMode .powerHud small { font-size: 9px; }
+  .focusMode .hudRest { margin: 8px 0; font-size: 10px; }
+  .focusMode .viewport, .focusMode .viewportPlaying {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+    justify-self: center;
+    width: auto;
+    min-width: 0;
+    height: min(calc(100dvh - max(8px, env(safe-area-inset-top)) - max(10px, env(safe-area-inset-bottom))), calc((100vw - 290px) * 3 / 4));
+    margin: 0;
+  }
+  .focusMode .controls { display: contents; }
+  .focusMode .controls > p { display: none; }
+  .focusMode .moveControls { grid-column: 1; grid-row: 3; align-self: end; justify-self: start; gap: 8px; }
+  .focusMode .moveControls button { min-width: 64px; min-height: 76px; }
+  .focusMode .jumpButton { grid-column: 3; grid-row: 3; align-self: end; justify-self: end; min-width: 110px !important; min-height: 86px !important; }
+  .focusMode .journeyPanel { grid-column: 2; grid-row: 1 / -1; z-index: 2; align-self: center; justify-self: center; width: min(640px, calc(100vw - 290px)); max-height: 100%; overflow: auto; }
+  .focusMode .rotateTip { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rotateIcon { animation: none; transform: rotate(-90deg); }
 }

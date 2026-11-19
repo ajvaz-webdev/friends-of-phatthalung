@@ -633,6 +633,13 @@ export default function BuffaloBoyGame() {
   const totalMangoes = adventure.reduce((sum, r) => sum + (r?.mangoes ?? 0), 0);
   const totalPossible = LEVELS.reduce((sum, l) => sum + l.mangoSeeds.length + l.secretMangoes.length, 0);
   const [soundOn, setSoundOn] = useState(true);
+  // Full-screen play: the card covers the whole screen; where the browser
+  // allows it (Android Chrome) it also goes truly full screen and turns sideways.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const nativeFullscreenRef = useRef(false);
+  const [focus, setFocus] = useState(false);
+  const [portraitPhone, setPortraitPhone] = useState(false);
+  const [rotateTipClosed, setRotateTipClosed] = useState(false);
   const [artReady, setArtReady] = useState(false);
   const [artFailed, setArtFailed] = useState(false);
   const [mangoCount, setMangoCount] = useState(0);
@@ -890,6 +897,58 @@ export default function BuffaloBoyGame() {
     if (context && context.state !== 'closed') void context.close().catch(() => {});
   }, []);
 
+  useEffect(() => {
+    const query = window.matchMedia('(orientation: portrait) and (pointer: coarse) and (max-width: 760px)');
+    let wasPortrait = query.matches;
+    setPortraitPhone(query.matches);
+    const update = () => {
+      setPortraitPhone(query.matches);
+      // Turned sideways mid-game without full screen: bring the game into view.
+      if (wasPortrait && !query.matches && modeRef.current === 'playing') cardRef.current?.scrollIntoView({ block: 'center' });
+      wasPortrait = query.matches;
+    };
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement && nativeFullscreenRef.current) { nativeFullscreenRef.current = false; setFocus(false); }
+    };
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
+  useEffect(() => {
+    if (!focus) return;
+    const root = document.documentElement;
+    const overflow = root.style.overflow;
+    root.style.overflow = 'hidden';
+    document.body.classList.add('game-focus');
+    return () => { root.style.overflow = overflow; document.body.classList.remove('game-focus'); };
+  }, [focus]);
+
+  const enterFocus = () => {
+    setFocus(true);
+    setRotateTipClosed(false);
+    const card = cardRef.current;
+    if (!card || !document.fullscreenEnabled || !card.requestFullscreen) return;
+    card.requestFullscreen({ navigationUI: 'hide' }).then(() => {
+      nativeFullscreenRef.current = true;
+      const orientation = screen.orientation as ScreenOrientation & { lock?: (type: string) => Promise<void> };
+      orientation?.lock?.('landscape').catch(() => {});
+    }).catch(() => {});
+  };
+
+  const exitFocus = () => {
+    setFocus(false);
+    if (document.fullscreenElement) {
+      nativeFullscreenRef.current = false;
+      void document.exitFullscreen().catch(() => {});
+    }
+    try { screen.orientation?.unlock?.(); } catch { /* not supported */ }
+  };
+
   const begin = (nextLevel = 0) => {
     if (soundOnRef.current && (!audioRef.current || audioRef.current.state === 'closed')) audioRef.current = new AudioContext();
     if (audioRef.current?.state === 'suspended') void audioRef.current.resume().catch(() => {});
@@ -988,12 +1047,18 @@ export default function BuffaloBoyGame() {
           <output aria-label="Test input status">{hud.replay ? 'REPLAY' : 'MANUAL'} · {hud.controls} · x {Math.round(hud.x)} · y {Math.round(hud.y)}</output>
         </div>}
 
-        <div className={styles.gameCard} data-game-input onContextMenu={event => event.preventDefault()} onDragStart={event => event.preventDefault()}>
+        <div ref={cardRef} className={`${styles.gameCard} ${focus ? styles.focusMode : ''}`} data-game-input onContextMenu={event => event.preventDefault()} onDragStart={event => event.preventDefault()}>
           <div className={styles.gameBar}>
             <div><span className={styles.statusDot}/><strong>BUFFALO BOY</strong><small>{level.name.toUpperCase()}</small></div>
+            <span className={styles.barButtons}>
+            <button type="button" className={`${styles.soundButton} ${styles.focusButton}`} onClick={focus ? exitFocus : enterFocus} aria-pressed={focus} aria-label={focus ? 'Leave full screen' : 'Play full screen'}>
+              <svg viewBox="0 0 24 24" aria-hidden="true">{focus ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/> : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>}</svg>
+              <span aria-hidden="true">{focus ? 'EXIT' : 'FULL SCREEN'}</span>
+            </button>
             <button type="button" className={styles.soundButton} onClick={toggleSound} aria-pressed={soundOn} aria-label={soundOn ? 'Turn game sound off' : 'Turn game sound on'}>
               <span aria-hidden="true">{soundOn ? 'SOUND ON' : 'SOUND OFF'}</span>
             </button>
+            </span>
           </div>
 
             {mode !== 'intro' && mode !== 'map' && <div className={styles.hud} aria-hidden="true">
@@ -1011,7 +1076,11 @@ export default function BuffaloBoyGame() {
                 <p>PHATTHALUNG ADVENTURE</p>
                 <h3>Buffalo Boy</h3>
                 <strong>Take a little trip through Phatthalung.</strong>
-                <button type="button" disabled={!artReady} onClick={() => begin(0)}>{artReady ? 'Start Adventure →' : artFailed ? 'Please reload to load the artwork' : 'Getting the journey ready…'}</button>
+                <span className={styles.startButtons}>
+                  <button type="button" disabled={!artReady} onClick={() => begin(0)}>{artReady ? 'Start Adventure →' : artFailed ? 'Please reload to load the artwork' : 'Getting the journey ready…'}</button>
+                  {artReady && !focus && <button type="button" className={styles.overlaySecondary} onClick={() => { enterFocus(); begin(0); }}>Play full screen</button>}
+                </span>
+                {portraitPhone && !focus && <small className={styles.sidewaysNote}><span className={styles.rotateIcon} aria-hidden="true"/>Best played full screen, with your phone sideways</small>}
                 <small className={styles.legend}><span>✦ Collect</span><span>! Danger</span><span>↕ Highlighted = interactive</span></small>
                 <small>3 levels · Checkpoints along the way</small>
               </div>
@@ -1060,6 +1129,14 @@ export default function BuffaloBoyGame() {
               <small>Progress stays with you while this page is open. Replay to collect the stamps you missed.</small>
             </>}
           </div>}
+
+          {focus && portraitPhone && !rotateTipClosed && (
+            <div className={styles.rotateTip} role="status">
+              <span className={styles.rotateIcon} aria-hidden="true"/>
+              <p><strong>Turn your phone sideways</strong> for a bigger view.</p>
+              <button type="button" onClick={() => setRotateTipClosed(true)}>Play upright</button>
+            </div>
+          )}
 
           <div className={styles.controls} aria-label="Game controls">
             <div className={styles.moveControls}>
